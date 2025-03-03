@@ -236,6 +236,64 @@ local function createModernButton(name, yOffset, callback)
     return buttonContainer
 end
 
+-- Function to create stand model
+local function createStand()
+    local stand = Instance.new("Model")
+    stand.Name = "Stand"
+    
+    local torso = Instance.new("Part")
+    torso.Name = "Torso"
+    torso.Size = Vector3.new(2, 2, 1)
+    torso.BrickColor = BrickColor.new("Really black")
+    torso.CanCollide = false
+    torso.Parent = stand
+    
+    local head = Instance.new("Part")
+    head.Name = "Head"
+    head.Size = Vector3.new(1, 1, 1)
+    head.BrickColor = BrickColor.new("Really black")
+    head.CanCollide = false
+    head.Parent = stand
+    
+    local rightArm = Instance.new("Part")
+    rightArm.Name = "RightArm"
+    rightArm.Size = Vector3.new(1, 2, 1)
+    rightArm.BrickColor = BrickColor.new("Really black")
+    rightArm.CanCollide = false
+    rightArm.Parent = stand
+    
+    local leftArm = Instance.new("Part")
+    leftArm.Name = "LeftArm"
+    leftArm.Size = Vector3.new(1, 2, 1)
+    leftArm.BrickColor = BrickColor.new("Really black")
+    leftArm.CanCollide = false
+    leftArm.Parent = stand
+    
+    -- Set primary part
+    stand.PrimaryPart = torso
+    
+    -- Weld parts together
+    local headWeld = Instance.new("Weld")
+    headWeld.Part0 = torso
+    headWeld.Part1 = head
+    headWeld.C0 = CFrame.new(0, 1.5, 0)
+    headWeld.Parent = torso
+    
+    local rightArmWeld = Instance.new("Weld")
+    rightArmWeld.Part0 = torso
+    rightArmWeld.Part1 = rightArm
+    rightArmWeld.C0 = CFrame.new(1.5, 0, 0)
+    rightArmWeld.Parent = torso
+    
+    local leftArmWeld = Instance.new("Weld")
+    leftArmWeld.Part0 = torso
+    leftArmWeld.Part1 = leftArm
+    leftArmWeld.C0 = CFrame.new(-1.5, 0, 0)
+    leftArmWeld.Parent = torso
+    
+    return stand
+end
+
 -- Feature functions
 local function toggleESP()
     states.esp = not states.esp
@@ -337,159 +395,41 @@ local function toggleStand()
     end
 end
 
--- Stand Creation and Management
-local function createStand()
-    local stand = Instance.new("Model")
-    stand.Name = "Stand"
+local function teleportToRandomPlayer()
+    local players = Players:GetPlayers()
+    local validPlayers = {}
     
-    -- Create main body parts
-    local torso = Instance.new("Part")
-    torso.Size = Vector3.new(2, 2, 1)
-    torso.BrickColor = BrickColor.new("Really black")
-    torso.Name = "Torso"
-    torso.Transparency = 0.2
-    torso.CanCollide = false
-    torso.Anchored = false
-    torso.Parent = stand
+    for _, player in ipairs(players) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            table.insert(validPlayers, player)
+        end
+    end
     
-    -- Set torso as PrimaryPart
-    stand.PrimaryPart = torso
-    
-    local head = Instance.new("Part")
-    head.Size = Vector3.new(1, 1, 1)
-    head.BrickColor = BrickColor.new("Really black")
-    head.Name = "Head"
-    head.Transparency = 0.2
-    head.CanCollide = false
-    head.Parent = stand
-    
-    -- Create arms for attacking
-    local rightArm = Instance.new("Part")
-    rightArm.Size = Vector3.new(1, 2, 1)
-    rightArm.BrickColor = BrickColor.new("Really black")
-    rightArm.Name = "RightArm"
-    rightArm.Transparency = 0.2
-    rightArm.CanCollide = false
-    rightArm.Parent = stand
-    
-    local leftArm = rightArm:Clone()
-    leftArm.Name = "LeftArm"
-    leftArm.Parent = stand
-    
-    -- Create welds
-    local headWeld = Instance.new("Weld")
-    headWeld.Part0 = torso
-    headWeld.Part1 = head
-    headWeld.C0 = CFrame.new(0, 1.5, 0)
-    headWeld.Parent = torso
-    
-    local rightArmWeld = Instance.new("Weld")
-    rightArmWeld.Part0 = torso
-    rightArmWeld.Part1 = rightArm
-    rightArmWeld.C0 = CFrame.new(1.5, 0, 0)
-    rightArmWeld.Parent = torso
-    
-    local leftArmWeld = Instance.new("Weld")
-    leftArmWeld.Part0 = torso
-    leftArmWeld.Part1 = leftArm
-    leftArmWeld.C0 = CFrame.new(-1.5, 0, 0)
-    leftArmWeld.Parent = torso
-
-    return stand
+    if #validPlayers > 0 then
+        local target = validPlayers[math.random(1, #validPlayers)]
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character:SetPrimaryPartCFrame(target.Character.HumanoidRootPart.CFrame)
+        end
+    end
 end
 
--- Stand attack function
-local function standAttack()
-    if states.stand then
-        local character = LocalPlayer.Character
-        if not character or not character:FindFirstChild("Stand") then return end
-        
-        local stand = character.Stand
-        local rightArm = stand:FindFirstChild("RightArm")
-        local leftArm = stand:FindFirstChild("LeftArm")
-        
-        -- Rapid punch animation with improved effects
-        for i = 1, 10 do
-            local arm = i % 2 == 0 and rightArm or leftArm
-            if arm then
-                -- Create punch trail effect
-                local trail = Instance.new("Trail")
-                trail.Lifetime = 0.2
-                trail.MinLength = 0.1
-                trail.MaxLength = 0.2
-                trail.Color = ColorSequence.new(THEME.accent)
-                trail.Transparency = NumberSequence.new({
-                    NumberSequenceKeypoint.new(0, 0),
-                    NumberSequenceKeypoint.new(1, 1)
-                })
-                trail.Parent = arm
-                
-                local a0 = Instance.new("Attachment")
-                local a1 = Instance.new("Attachment")
-                a0.Position = Vector3.new(0, 1, 0)
-                a1.Position = Vector3.new(0, -1, 0)
-                a0.Parent = arm
-                a1.Parent = arm
-                trail.Attachment0 = a0
-                trail.Attachment1 = a1
-                
-                -- Create punch animation
-                local punchTween = TweenService:Create(arm, TweenInfo.new(0.1), {
-                    CFrame = arm.CFrame * CFrame.new(0, 0, -2)
-                })
-                punchTween:Play()
-                wait(0.05)
-                
-                -- Reset arm position
-                local resetTween = TweenService:Create(arm, TweenInfo.new(0.1), {
-                    CFrame = arm.CFrame
-                })
-                resetTween:Play()
-                
-                -- Check for hits with improved visual feedback
-                local rayOrigin = arm.Position
-                local rayDirection = arm.CFrame.LookVector * 4
-                local raycastParams = RaycastParams.new()
-                raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-                raycastParams.FilterDescendantsInstances = {character}
-                
-                local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-                if raycastResult and raycastResult.Instance then
-                    local hitPlayer = Players:GetPlayerFromCharacter(raycastResult.Instance.Parent)
-                    if hitPlayer then
-                        local humanoid = hitPlayer.Character:FindFirstChild("Humanoid")
-                        if humanoid then
-                            -- Apply damage with visual effect
-                            humanoid.Health = humanoid.Health - STAND_DAMAGE
-                            
-                            -- Create hit effect
-                            local hitEffect = Instance.new("Part")
-                            hitEffect.Size = Vector3.new(0.5, 0.5, 0.5)
-                            hitEffect.CFrame = CFrame.new(raycastResult.Position)
-                            hitEffect.Anchored = true
-                            hitEffect.CanCollide = false
-                            hitEffect.BrickColor = BrickColor.new("Really red")
-                            hitEffect.Material = Enum.Material.Neon
-                            hitEffect.Shape = Enum.PartType.Ball
-                            hitEffect.Parent = workspace
-                            
-                            TweenService:Create(hitEffect, TweenInfo.new(0.2), {
-                                Size = Vector3.new(2, 2, 2),
-                                Transparency = 1
-                            }):Play()
-                            
-                            game:GetService("Debris"):AddItem(hitEffect, 0.2)
-                        end
-                    end
-                end
-                
-                -- Remove trail after punch
-                game:GetService("Debris"):AddItem(trail, 0.2)
-                game:GetService("Debris"):AddItem(a0, 0.2)
-                game:GetService("Debris"):AddItem(a1, 0.2)
-            end
-            wait(0.1)
+local function teleportPlayersToMe()
+    local character = LocalPlayer.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+    
+    local myPos = character.HumanoidRootPart.CFrame
+    
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character:SetPrimaryPartCFrame(myPos * CFrame.new(0, 3, 0))
         end
+    end
+end
+
+local function teleportToMouse()
+    local character = LocalPlayer.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        character:SetPrimaryPartCFrame(CFrame.new(mouse.Hit.Position) + Vector3.new(0, 3, 0))
     end
 end
 
